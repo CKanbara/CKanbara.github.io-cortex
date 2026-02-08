@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title>CORTEX -文章お手軽修正マシン-</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="CORTEXは、日本語の文章の修正を自動化したツールです。形式段落の字下げや三点リーダの個数修正など、一般的なテキストエディタでは少々面倒な文章の修正・校正を簡単な設定で行うことができます。"
+    />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <!-- GitHub Pages版：PHP分岐なしで固定読み込み -->
+    <script type="text/javascript" src="word.js"></script>
+    <script type="text/javascript" src="setteiyomikaki.js"></script>
+
+    <script type="text/javascript" src="download.js"></script>
+    <script type="text/javascript" src="jscolor/jscolor.js"></script>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jquery_timers.js"></script>
+    <script type="text/javascript" src="canvas.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/1.0.29/encoding.min.js"
+    ></script>
+
+    <script>
+      // GitHub Pages版（ログイン/セッションなし）
+      var usrnm = "";
+      var freeseigen = 3000; // 念のため残す（JSが参照してるかもしれない）
+    </script>
+
+    <link rel="icon" href="image/favicon.png" />
+    <script>
+      (function () {
+        // 画面幅で判定（UAより安全）
+        var isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
+
+        // すでに mob.html にいるなら何もしない
+        var alreadyMobilePage = location.pathname.endsWith("/mob.html") || location.pathname.endsWith("mob.html");
+
+        if (isMobile && !alreadyMobilePage) {
+          // ループ防止のため一回だけ（sessionStorage）
+          if (!sessionStorage.getItem("cortex_redirected_mobile")) {
+            sessionStorage.setItem("cortex_redirected_mobile", "1");
+            location.replace("./mob.html");
+          }
+        }
+      })();
+   </script>
+  </head>
+
+  <body id="bg">
+    <div id="header">
+      <img src="image/logo.png" alt="CORTEX" />
+    </div>
+
+    <div id="main">
+      <!-- 旧：広告（PHP条件で表示していたもの）
+           動作確認の妨げになりやすいので一旦オフにしてあります
+      -->
+      <!--
+      <div style="text-align:center">
+        ...
+      </div>
+      -->
+
+      <!-- 設定フォーム -->
+      <form name="jouken" id="checkbox">
+        設定
+        <br />
+
+        <div
+          id="Checkbox_div1"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #ffd9aa;
+          "
+        >
+          <input
+            id="Checkbox1"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox1">形式段落の字下げ</label>
+          (<input
+            id="Checkbox1_2"
+            type="checkbox"
+            onchange="henkan()"
+          /><label for="Checkbox1_2">「」や（）にも適用する</label>)
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox1"
+              class="jscolor"
+              type="text"
+              value="ffd9aa"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div2"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #6bffe1;
+          "
+        >
+          <input
+            id="Checkbox2"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox2">三点リーダの個数修正</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox2"
+              class="jscolor"
+              type="text"
+              value="6bffe1"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div3"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #d5ccff;
+          "
+        >
+          <input
+            id="Checkbox3"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox3">連続した伸ばし棒をダッシュに修正</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox3"
+              class="jscolor"
+              type="text"
+              value="d5ccff"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div4"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #ff0000;
+          "
+        >
+          <input
+            id="Checkbox4"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox4">連続した空行を解消</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox4"
+              class="jscolor"
+              type="text"
+              value="FF0000"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div8"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #ffa299;
+          "
+        >
+          <input
+            id="Checkbox8"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox8">疑問符や感嘆符を全角に修正</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox8"
+              class="jscolor"
+              type="text"
+              value="FFA299"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div5"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #c5ffa1;
+          "
+        >
+          <input
+            id="Checkbox5"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox5">疑問符・感嘆符の後に全角スペースを挿入</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox5"
+              class="jscolor"
+              type="text"
+              value="C5FFA1"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div6"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #fff200;
+          "
+        >
+          <input
+            id="Checkbox6"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox6">。。。や・・・や...を三点リーダに修正</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox6"
+              class="jscolor"
+              type="text"
+              value="FFF200"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div12"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #e5e5e5;
+          "
+        >
+          <input
+            id="Checkbox12"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox12">かぎかっこ末尾の句点を除去</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox12"
+              class="jscolor"
+              type="text"
+              value="e5e5e5"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div7"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #9fe1ff;
+          "
+        >
+          <input
+            id="Checkbox7"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox7"
+            >間違ったダブルクォーテーション(""、””、““、'''')を正しく(“”)修正</label
+          >
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox7"
+              class="jscolor"
+              type="text"
+              value="9fe1ff"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div9"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #4fff81;
+          "
+        >
+          <input
+            id="Checkbox9"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox9"
+            >正しいダブルクォーテーション(“”)をダブルミニュート(〝〟)に変更</label
+          >
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox9"
+              class="jscolor"
+              type="text"
+              value="4fff81"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div10"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #ffcdf4;
+          "
+        >
+          <input
+            id="Checkbox10"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox10">数字を全角化</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox10"
+              class="jscolor"
+              type="text"
+              value="ffcdf4"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          id="Checkbox_div11"
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #9cffbb;
+          "
+        >
+          <input
+            id="Checkbox11"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox11">アルファベットを全角化</label>
+          <span style="float: right; margin-right: 0.5em"
+            ><input
+              id="ColorForCheckbox11"
+              class="jscolor"
+              type="text"
+              value="9cffbb"
+              onchange="henkan()"
+              size="6"
+          /></span>
+          <div style="clear: both"></div>
+        </div>
+
+        <div
+          style="
+            border-style: solid;
+            border-width: 2px 2px 2px 17px;
+            border-color: #000000;
+            margin-top: 15px;
+          "
+        >
+          <input
+            id="Checkbox13"
+            type="checkbox"
+            checked="checked"
+            onchange="henkan()"
+          /><label for="Checkbox13">文章中のURLをあらゆる修正から保護</label>
+        </div>
+      </form>
+      <!-- /設定フォーム -->
+
+      <!-- txt読み込み -->
+      テキストファイル読み込み<br />
+      <input type="file" id="targetTextFiles" size="50" onchange="filechange();" />
+      <span id="yomikomi"></span>
+      <script src="upload.js"></script>
+      <!-- /txt読み込み -->
+
+      <!-- タブの中 -->
+      <div class="tabs">
+        <!-- タブ切り替えボタン -->
+        <input id="vertical" type="radio" name="tab_item" checked />
+        <label class="tab_item" for="vertical" onclick="dataikou('v')"
+          >縦に表示</label
+        >
+        <input id="horisontal" type="radio" name="tab_item" />
+        <label class="tab_item" for="horisontal" onclick="dataikou('h')"
+          >横に表示</label
+        >
+        <!-- /タブ切り替えボタン -->
+
+        <!-- 縦に並べる -->
+        <div class="tab_content" id="vertical_content">
+          <form name="convert_v">
+            <b>元の文章</b>
+            <button class="dl_button" type="button" onclick="clearinputs()">
+              入力欄をクリアする
+            </button>
+            <br />
+            <textarea
+              name="before_v"
+              class="textarea1"
+              onkeyup="henkan()"
+              id="textarea_v"
+              placeholder="ここにテキストを入力"
+            ></textarea>
+            <div class="mojisu">
+              文字数：<span id="mojisu1">0</span>／
+              <b>無制限（GitHub Pages版）</b>
+            </div>
+          </form>
+          <br />
+
+          <b>修正後</b>　
+          <button onclick="copyToClipboard()" class="copy_button" type="button">
+            コピー
+          </button>
+          　
+          <button onclick="filedownload()" class="dl_button" type="button">
+            ダウンロード
+          </button>
+          　
+          <button onclick="backToTextbox()" class="react_button" type="button">
+            ↑入力欄に反映↑
+          </button>
+
+          <div id="after_v"></div>
+        </div>
+        <!-- /縦に並べる -->
+
+        <!-- 横に並べる -->
+        <div class="tab_content" id="horisontal_content">
+          <form name="convert_h" style="float: left">
+            <b>元の文章</b>
+            <button class="dl_button" type="button" onclick="clearinputs()">
+              入力欄をクリアする
+            </button>
+            <br />
+            <textarea
+              name="before_h"
+              class="textarea2"
+              onkeyup="henkan()"
+              id="textarea_h"
+            ></textarea>
+            <div class="mojisu">
+              文字数：<span id="mojisu2">0</span>／
+              <b>無制限（GitHub Pages版）</b>
+            </div>
+          </form>
+
+          <div class="floatright">
+            <b>修正後</b><br />
+            <button onclick="copyToClipboard()" class="copy_button" type="button">
+              コピー
+            </button>
+            　
+            <button onclick="filedownload()" class="dl_button" type="button">
+              ダウンロード
+            </button>
+            　
+            <button onclick="backToTextbox()" class="react_button" type="button">
+              ←入力欄に反映←
+            </button>
+
+            <div id="after_h"></div>
+          </div>
+        </div>
+        <!-- /横に並べる -->
+      </div>
+      <!-- /タブの中 -->
+
+      <!-- 縦書き表示 -->
+      <span id="tategaki_area">
+        <button onclick="tategakibutton()" class="dl_button">縦書きプレビューを表示</button>
+        <iframe id="ttgkframe" width="800" height="0"></iframe>
+      </span>
+      <!-- 縦書き表示ここまで -->
+
+    </div>
+
+    <div id="footer">Copyright© 2019 Itoma(Raidelk)</div>
+  </body>
+</html>
