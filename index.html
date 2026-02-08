@@ -410,8 +410,21 @@
       <!-- /設定フォーム -->
 
       <!-- txt読み込み -->
-      テキストファイル読み込み<br />
-      <input type="file" id="targetTextFiles" size="50" onchange="filechange();" />
+      テキストファイル読み込み<br>
+
+      <label style="font-size:14px;">
+        文字コード：
+        <select id="fileEncoding" onchange="filechange()">
+          <option value="auto" selected>自動判定</option>
+          <option value="utf-8">UTF-8</option>
+          <option value="utf-8-bom">UTF-8 (BOM付き)</option>
+          <option value="shift_jis">Shift_JIS</option>
+          <option value="euc-jp">EUC-JP</option>
+        </select>
+      </label>
+      <br>
+
+      <input type="file" id="targetTextFiles" size="50" onchange="filechange();">
       <span id="yomikomi"></span>
       <script src="upload.js"></script>
       <!-- /txt読み込み -->
