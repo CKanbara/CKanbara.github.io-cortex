@@ -31,23 +31,6 @@
     </script>
 
     <link rel="icon" href="image/favicon.png" />
-    <script>
-      (function () {
-        // 画面幅で判定（UAより安全）
-        var isMobile = window.matchMedia && window.matchMedia("(max-width: 640px)").matches;
-
-        // すでに mob.html にいるなら何もしない
-        var alreadyMobilePage = location.pathname.endsWith("/mob.html") || location.pathname.endsWith("mob.html");
-
-        if (isMobile && !alreadyMobilePage) {
-          // ループ防止のため一回だけ（sessionStorage）
-          if (!sessionStorage.getItem("cortex_redirected_mobile")) {
-            sessionStorage.setItem("cortex_redirected_mobile", "1");
-            location.replace("./mob.html");
-          }
-        }
-      })();
-   </script>
   </head>
 
   <body id="bg">
